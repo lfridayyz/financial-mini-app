@@ -8,7 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.2.0/dist/css/tabulator.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: #0f172a; color: #e2e8f0; font-family: system-ui; }
+    body { background: #0f172a; color: #e2e8f0; }
     .tabulator { background: #1e2937; color: white; border-radius: 12px; }
   </style>
 </head>
@@ -16,8 +16,9 @@
 
 <div class="max-w-6xl mx-auto">
   <h1 class="text-3xl font-bold text-center mb-6">📊 Таблица операций</h1>
+  
+  <div id="debug" class="text-xs text-gray-400 mb-4 text-center"></div>
   <div id="table" class="shadow-2xl"></div>
-  <div id="status" class="text-center mt-4 text-sm text-gray-400"></div>
 </div>
 
 <script>
@@ -31,23 +32,24 @@
 
   let tableData = [];
 
+  document.getElementById("debug").innerHTML = `📡 Получено данных: ${encoded ? encoded.length : 0} символов`;
+
   if (encoded) {
     try {
       tableData = JSON.parse(atob(encoded));
-      document.getElementById("status").innerHTML = `Загружено ${tableData.length} операций`;
+      document.getElementById("debug").innerHTML += `<br>✅ Успешно декодировано: ${tableData.length} строк`;
     } catch (e) {
-      document.getElementById("status").innerHTML = `Ошибка декодирования данных: ${e.message}`;
-      console.error(e);
+      document.getElementById("debug").innerHTML += `<br>❌ Ошибка декодирования: ${e.message}`;
     }
   } else {
-    document.getElementById("status").innerHTML = "Данные не переданы от бота";
+    document.getElementById("debug").innerHTML += `<br>❌ Параметр data не найден в URL`;
   }
 
   if (tableData.length === 0) {
     document.getElementById("table").innerHTML = `
-      <div class="text-center py-20">
+      <div class="text-center py-20 text-gray-400">
         <p class="text-6xl mb-4">📭</p>
-        <p class="text-xl">Нет данных для отображения</p>
+        <p>Нет данных. Попробуйте сгенерировать отчёт заново.</p>
       </div>`;
   } else {
     new Tabulator("#table", {
@@ -55,7 +57,6 @@
       layout: "fitColumns",
       pagination: "local",
       paginationSize: 20,
-      paginationSizeSelector: [10, 20, 50],
       columns: [
         { title: "Дата", field: "date", sorter: "date", width: 110 },
         { title: "Категория", field: "category", sorter: "string", headerFilter: "input" },
@@ -66,8 +67,8 @@
           formatter: function(cell) {
             const val = cell.getValue();
             return val >= 0 
-              ? `<span class="text-green-400 font-medium">+${val.toLocaleString('ru-RU')}</span>` 
-              : `<span class="text-red-400 font-medium">${val.toLocaleString('ru-RU')}</span>`;
+              ? `<span class="text-green-400">+${val.toLocaleString('ru-RU')}</span>` 
+              : `<span class="text-red-400">${val.toLocaleString('ru-RU')}</span>`;
           }
         },
         { title: "Комментарий", field: "comment", sorter: "string", headerFilter: "input" }
