@@ -15,9 +15,10 @@
 <body class="p-4">
 
 <div class="max-w-6xl mx-auto">
-  <h1 class="text-3xl font-bold text-center mb-6">📊 Таблица операций</h1>
+  <h1 class="text-3xl font-bold text-center mb-4">📊 Таблица операций</h1>
   
-  <div id="debug" class="text-xs text-gray-400 mb-4 text-center"></div>
+  <div id="debug" class="text-xs bg-gray-800 p-3 rounded mb-4 font-mono overflow-auto max-h-40"></div>
+  
   <div id="table" class="shadow-2xl"></div>
 </div>
 
@@ -31,25 +32,27 @@
   const encoded = urlParams.get('data');
 
   let tableData = [];
-
-  document.getElementById("debug").innerHTML = `📡 Получено данных: ${encoded ? encoded.length : 0} символов`;
+  let debugText = `📡 Получено данных: ${encoded ? encoded.length : 0} символов<br>`;
 
   if (encoded) {
     try {
       tableData = JSON.parse(atob(encoded));
-      document.getElementById("debug").innerHTML += `<br>✅ Успешно декодировано: ${tableData.length} строк`;
+      debugText += `✅ Успешно декодировано: ${tableData.length} операций`;
     } catch (e) {
-      document.getElementById("debug").innerHTML += `<br>❌ Ошибка декодирования: ${e.message}`;
+      debugText += `❌ Ошибка декодирования: ${e.message}`;
     }
   } else {
-    document.getElementById("debug").innerHTML += `<br>❌ Параметр data не найден в URL`;
+    debugText += `❌ Параметр 'data' не найден в URL`;
   }
+
+  document.getElementById("debug").innerHTML = debugText;
 
   if (tableData.length === 0) {
     document.getElementById("table").innerHTML = `
       <div class="text-center py-20 text-gray-400">
         <p class="text-6xl mb-4">📭</p>
-        <p>Нет данных. Попробуйте сгенерировать отчёт заново.</p>
+        <p class="text-xl">Нет данных для отображения</p>
+        <p class="text-sm mt-2">Попробуйте сгенерировать отчёт заново</p>
       </div>`;
   } else {
     new Tabulator("#table", {
