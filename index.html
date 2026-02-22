@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Мои финансы</title>
+  <title>Таблица операций</title>
   <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.2.0/dist/js/tabulator.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.2.0/dist/css/tabulator.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: #0f172a; color: #e2e8f0; }
-    .tabulator { background: #1e2937; color: white; border-radius: 12px; overflow: hidden; }
+    body { background: #0f172a; color: #e2e8f0; font-family: system-ui; }
+    .tabulator { background: #1e2937; color: white; border-radius: 12px; }
   </style>
 </head>
 <body class="p-4">
 
 <div class="max-w-6xl mx-auto">
   <h1 class="text-3xl font-bold text-center mb-6">📊 Таблица операций</h1>
-  
   <div id="table" class="shadow-2xl"></div>
+  <div id="status" class="text-center mt-4 text-sm text-gray-400"></div>
 </div>
 
 <script>
@@ -26,46 +26,56 @@
   tg.setHeaderColor("#0f172a");
   tg.setBackgroundColor("#0f172a");
 
-  // Получаем данные из URL (бот передаёт их в base64)
   const urlParams = new URLSearchParams(window.location.search);
   const encoded = urlParams.get('data');
 
   let tableData = [];
+
   if (encoded) {
     try {
       tableData = JSON.parse(atob(encoded));
+      document.getElementById("status").innerHTML = `Загружено ${tableData.length} операций`;
     } catch (e) {
-      console.error("Ошибка декодирования данных", e);
+      document.getElementById("status").innerHTML = `Ошибка декодирования данных: ${e.message}`;
+      console.error(e);
     }
+  } else {
+    document.getElementById("status").innerHTML = "Данные не переданы от бота";
   }
 
-  // Создаём таблицу
-  new Tabulator("#table", {
-    data: tableData,
-    layout: "fitColumns",
-    pagination: "local",
-    paginationSize: 20,
-    paginationSizeSelector: [10, 20, 50],
-    columns: [
-      { title: "Дата", field: "date", sorter: "date", width: 110 },
-      { title: "Категория", field: "category", sorter: "string", headerFilter: "input" },
-      { 
-        title: "Сумма ₽", 
-        field: "amount", 
-        sorter: "number",
-        formatter: function(cell) {
-          const val = cell.getValue();
-          return val >= 0 
-            ? `<span class="text-green-400">+${val.toLocaleString('ru-RU')}</span>` 
-            : `<span class="text-red-400">${val.toLocaleString('ru-RU')}</span>`;
-        }
-      },
-      { title: "Комментарий", field: "comment", sorter: "string", headerFilter: "input" }
-    ],
-    initialSort: [{column: "date", dir: "desc"}]
-  });
+  if (tableData.length === 0) {
+    document.getElementById("table").innerHTML = `
+      <div class="text-center py-20">
+        <p class="text-6xl mb-4">📭</p>
+        <p class="text-xl">Нет данных для отображения</p>
+      </div>`;
+  } else {
+    new Tabulator("#table", {
+      data: tableData,
+      layout: "fitColumns",
+      pagination: "local",
+      paginationSize: 20,
+      paginationSizeSelector: [10, 20, 50],
+      columns: [
+        { title: "Дата", field: "date", sorter: "date", width: 110 },
+        { title: "Категория", field: "category", sorter: "string", headerFilter: "input" },
+        { 
+          title: "Сумма ₽", 
+          field: "amount", 
+          sorter: "number",
+          formatter: function(cell) {
+            const val = cell.getValue();
+            return val >= 0 
+              ? `<span class="text-green-400 font-medium">+${val.toLocaleString('ru-RU')}</span>` 
+              : `<span class="text-red-400 font-medium">${val.toLocaleString('ru-RU')}</span>`;
+          }
+        },
+        { title: "Комментарий", field: "comment", sorter: "string", headerFilter: "input" }
+      ],
+      initialSort: [{column: "date", dir: "desc"}]
+    });
+  }
 
-  // Кнопка закрытия
   tg.MainButton.setText("Закрыть");
   tg.MainButton.show();
   tg.MainButton.onClick(() => tg.close());
