@@ -17,7 +17,8 @@
 <div class="max-w-6xl mx-auto">
   <h1 class="text-3xl font-bold text-center mb-4">📊 Таблица операций</h1>
   
-  <div id="debug" class="text-xs bg-gray-800 p-3 rounded mb-4 font-mono overflow-auto max-h-40"></div>
+  <!-- ОТЛАДОЧНАЯ ПАНЕЛЬ (всегда видна) -->
+  <div id="debug" class="text-xs bg-gray-800 p-3 rounded mb-4 font-mono whitespace-pre-wrap max-h-48 overflow-auto"></div>
   
   <div id="table" class="shadow-2xl"></div>
 </div>
@@ -31,21 +32,21 @@
   const urlParams = new URLSearchParams(window.location.search);
   const encoded = urlParams.get('data');
 
-  let tableData = [];
-  let debugText = `📡 Получено данных: ${encoded ? encoded.length : 0} символов<br>`;
+  let debugText = `📡 Получено в URL: ${encoded ? encoded.length : 0} символов\n`;
 
+  let tableData = [];
   if (encoded) {
     try {
       tableData = JSON.parse(atob(encoded));
-      debugText += `✅ Успешно декодировано: ${tableData.length} операций`;
+      debugText += `✅ Успешно декодировано: ${tableData.length} операций\n`;
     } catch (e) {
-      debugText += `❌ Ошибка декодирования: ${e.message}`;
+      debugText += `❌ Ошибка декодирования: ${e.message}\n`;
     }
   } else {
-    debugText += `❌ Параметр 'data' не найден в URL`;
+    debugText += `❌ Параметр data не найден в URL\n`;
   }
 
-  document.getElementById("debug").innerHTML = debugText;
+  document.getElementById("debug").textContent = debugText;
 
   if (tableData.length === 0) {
     document.getElementById("table").innerHTML = `
