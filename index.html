@@ -4,23 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Таблица операций</title>
-  <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.2.0/dist/js/tabulator.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.2.0/dist/css/tabulator.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { background: #0f172a; color: #e2e8f0; }
-    .tabulator { background: #1e2937; color: white; border-radius: 12px; }
-  </style>
 </head>
-<body class="p-4">
+<body class="bg-slate-900 text-white p-6">
 
-<div class="max-w-6xl mx-auto">
-  <h1 class="text-3xl font-bold text-center mb-4">📊 Таблица операций</h1>
-  
-  <!-- ОТЛАДОЧНАЯ ПАНЕЛЬ (всегда видна) -->
-  <div id="debug" class="text-xs bg-gray-800 p-3 rounded mb-4 font-mono whitespace-pre-wrap max-h-48 overflow-auto"></div>
-  
-  <div id="table" class="shadow-2xl"></div>
+<h1 class="text-3xl font-bold text-center mb-8">📊 Таблица операций</h1>
+
+<div class="bg-slate-800 p-6 rounded-2xl text-sm font-mono whitespace-pre-wrap max-h-[70vh] overflow-auto">
+  <strong>Debug info:</strong><br><br>
+  URL: <span id="url"></span><br><br>
+  Data length: <span id="length"></span><br><br>
+  Raw data:<br>
+  <span id="data"></span>
 </div>
 
 <script>
@@ -29,56 +24,22 @@
   tg.setHeaderColor("#0f172a");
   tg.setBackgroundColor("#0f172a");
 
+  document.getElementById("url").textContent = window.location.href;
+
   const urlParams = new URLSearchParams(window.location.search);
   const encoded = urlParams.get('data');
 
-  let debugText = `📡 Получено в URL: ${encoded ? encoded.length : 0} символов\n`;
+  document.getElementById("length").textContent = encoded ? encoded.length : 0;
 
-  let tableData = [];
   if (encoded) {
     try {
-      tableData = JSON.parse(atob(encoded));
-      debugText += `✅ Успешно декодировано: ${tableData.length} операций\n`;
+      const decoded = atob(encoded);
+      document.getElementById("data").innerHTML = decoded.substring(0, 1500) + (decoded.length > 1500 ? "..." : "");
     } catch (e) {
-      debugText += `❌ Ошибка декодирования: ${e.message}\n`;
+      document.getElementById("data").innerHTML = "Decode error: " + e.message;
     }
   } else {
-    debugText += `❌ Параметр data не найден в URL\n`;
-  }
-
-  document.getElementById("debug").textContent = debugText;
-
-  if (tableData.length === 0) {
-    document.getElementById("table").innerHTML = `
-      <div class="text-center py-20 text-gray-400">
-        <p class="text-6xl mb-4">📭</p>
-        <p class="text-xl">Нет данных для отображения</p>
-        <p class="text-sm mt-2">Попробуйте сгенерировать отчёт заново</p>
-      </div>`;
-  } else {
-    new Tabulator("#table", {
-      data: tableData,
-      layout: "fitColumns",
-      pagination: "local",
-      paginationSize: 20,
-      columns: [
-        { title: "Дата", field: "date", sorter: "date", width: 110 },
-        { title: "Категория", field: "category", sorter: "string", headerFilter: "input" },
-        { 
-          title: "Сумма ₽", 
-          field: "amount", 
-          sorter: "number",
-          formatter: function(cell) {
-            const val = cell.getValue();
-            return val >= 0 
-              ? `<span class="text-green-400">+${val.toLocaleString('ru-RU')}</span>` 
-              : `<span class="text-red-400">${val.toLocaleString('ru-RU')}</span>`;
-          }
-        },
-        { title: "Комментарий", field: "comment", sorter: "string", headerFilter: "input" }
-      ],
-      initialSort: [{column: "date", dir: "desc"}]
-    });
+    document.getElementById("data").innerHTML = "Параметр data не найден в URL";
   }
 
   tg.MainButton.setText("Закрыть");
